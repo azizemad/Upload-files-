@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>رفع ملف مباشر بنسبة التحميل</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; margin-top: 50px; }
+        .upload-box { border: 2px dashed #ccc; padding: 30px; border-radius: 10px; text-align: center; width: 350px; }
+        input[type="file"] { margin-bottom: 20px; }
+        .btn { background-color: #2ecc71; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+        .btn:hover { background-color: #27ae60; }
+        #progressContainer { display: none; margin-top: 20px; }
+        progress { width: 100%; height: 20px; }
+        #status { margin-top: 10px; color: #333; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="upload-box">
+    <input type="file" id="fileInput"><br>
+    <button class="btn" onclick="startUpload()">ابدأ الرفع الآن</button>
+
+    <div id="progressContainer">
+        <progress id="progressBar" value="0" max="100"></progress>
+        <div id="status">0%</div>
+    </div>
+</div>
+
+<script>
+function startUpload() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('من فضلك اختر ملف أولاً!');
+        return;
+    }
+
+    const cloudName = 'dmti0bnlj';
+    const uploadPreset = 'ml_default'; // تقدر تغيره لـ h0pyvi7w لو تحب
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/upload`, true);
+
+    document.getElementById('progressContainer').style.display = 'block';
+
+    // حساب النسبة المئوية
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percentage = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('progressBar').value = percentage;
+            document.getElementById('status').innerText = percentage + '%';
+        }
+    };
+
+    // عند اكتمال الرفع وظهور اللينك
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            // هنا اللينك هيظهر مباشرة على الشاشة للنسخ أو الضغط
+            document.getElementById('status').innerHTML = `
+                تم الرفع بنجاح! 🎉<br><br>
+                <a href="${response.secure_url}" target="_blank" style="color: #2ecc71; text-decoration: underline; word-break: break-all;">
+                    ${response.secure_url}
+                </a>
+            `;
+        } else {
+            document.getElementById('status').innerText = 'فشل الرفع، تأكد من إعدادات الـ Preset';
+        }
+    };
+
+    xhr.send(formData);
+}
+</script>
+
+</body>
+</html>
